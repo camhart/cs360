@@ -1,0 +1,1 @@
+Synchronization was used in Q.cc and Data.cc.  Both instances of these objects are created in Server.cc, however each one is passed as a pointer to each of the ServerObj's created.  There is one ServerObj for each thread and the passing takes place in createThreadPool in Server.cc.

@@ -1,0 +1,47 @@
+Report Notes
+
+Nonblocking IO is used.  I'm not sure what else to say about it.  You can see evidence of it in the lines of code below.  The line numbers might be off by a couple as I made a few changes after making this.  Each time recv or send is performed, I do some checking to see if EAGAIN or EWOULDBLOCK is raised.  If it is I handle it appropriately.
+
+Seperate caches are used for each socket.  I have a dictionary that uses the socket file descriptor as the key and the value is the cache.
+
+My mark and sweep method is mostly self contained within the sweep() method, with the exception of self.lastSweep.  The way it works is if current time - self.lastSweep is > self.sweepInterval then it performs a sweep.  When a sweep occurs I go through each of the clients, and if they have been idle for more than the timeout parameter included in web.conf file, I close and cleanup that client using self.cleanupClient(socketfiledescriptor).  Each time a valid recv() is performed on a client, the time of that activity is marked for that client in the self.clientsActivity dictionary.  This time is what's used in the sweep method.
+
+-Non-blocking socket IO
+	line 100
+	    def handleServer(self):
+	        (client,address) = self.server.accept()
+	        client.setblocking(0)
+	line 352
+	     def handleClient(self,fd):
+	     	-recv
+    		-checks for EAGAIN and/or EWOULDBLOCK	     
+	line 161
+    	def sendFile(self, clientSock, filepath, bytessent=-1, metabytes=-1):
+    		-send
+    		-checks for EAGAIN and/or EWOULDBLOCK
+   	line 251
+   	    def sendMsg(self, client, msg):
+   	    	-send
+    		-checks for EAGAIN and/or EWOULDBLOCK
+
+-Seperate cache
+	line 13
+		self.clientsCache = {}
+	line 361
+		self.clientsCache[fd]+= data
+
+-Mark and sweep
+	line 48
+	    self.lastSweep = time.time()
+	line 52
+		self.sweep()
+	line 71
+	    def sweep(self):
+
+-Low Level socket routine
+	line 357
+        data = self.clients[fd].recv(self.size)
+    line 181
+        bytesSent = clientSock.send(chunk)
+    line 259
+        bs = client.send(msg[bytessent:totalbytes])

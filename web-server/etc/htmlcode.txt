@@ -1,0 +1,9 @@
+<html>
+<body>
+<h1>404</h1>
+</body>
+</html>
+
+//content type = text/html
+//last modified - current time?
+send all of the headers everytime
